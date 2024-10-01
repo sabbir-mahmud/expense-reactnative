@@ -1,29 +1,23 @@
 import React from 'react';
-import {Text, TouchableOpacity, View} from 'react-native';
+import {ScrollView, View} from 'react-native';
 import Expense from '../components/expense/Expense';
+import LoadingSpinner from '../components/Loading';
+import {useGetDetailsQuery} from '../lib/api/expenseSlice';
 
 const Expenses = () => {
-  const expenseDetails = [
-    {
-      details: 'home expense',
-      amount: 98.12,
-      type: 'expense',
-      date: '2024-04-19',
-    },
-    {
-      details: 'home expense',
-      amount: 98.12,
-      type: 'earn',
-      date: '2024-04-19',
-    },
-  ];
+  const {data, isLoading, error} = useGetDetailsQuery();
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
-    <View>
-      {expenseDetails.map(expense => (
-        <Expense expense={expense} />
-      ))}
-    </View>
+    <ScrollView>
+      <View>
+        {data?.map((expense: any): any => (
+          <Expense key={expense._id} expense={expense} />
+        ))}
+      </View>
+    </ScrollView>
   );
 };
 
