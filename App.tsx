@@ -3,7 +3,7 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
 import {useSelector} from 'react-redux';
 import Expenses from './src/screens/Expenses';
-import FormCard from './src/screens/Form';
+import FormScreen from './src/screens/Form';
 import Home from './src/screens/Home';
 import Login from './src/screens/Login';
 
@@ -11,8 +11,6 @@ const Stack = createNativeStackNavigator();
 
 const App = () => {
   const user = useSelector((state: any) => state.user);
-  console.log(user);
-
   return (
     <NavigationContainer>
       {user ? (
@@ -33,7 +31,7 @@ const App = () => {
           />
           <Stack.Screen
             name="new"
-            component={FormCard}
+            component={FormScreen}
             options={{
               headerShown: false,
             }}

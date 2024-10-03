@@ -11,7 +11,7 @@ const Expenses = () => {
   }
 
   return (
-    <ScrollView>
+    <ScrollView className="bg-black">
       <View>
         {data?.map((expense: any): any => (
           <Expense key={expense._id} expense={expense} />

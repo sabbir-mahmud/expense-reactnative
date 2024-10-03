@@ -17,6 +17,8 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
+      console.log(loginData);
+
       const data = await createLogin(loginData);
       if (data && data.data && data.data.token) {
         const token = data.data.token;

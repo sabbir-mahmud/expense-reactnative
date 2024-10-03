@@ -1,140 +1,101 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
 import {Picker} from '@react-native-picker/picker';
-import {Formik} from 'formik';
-import React, {useState} from 'react';
-import {Alert, View} from 'react-native';
-import {Button, Text, TextInput} from 'react-native-paper';
-import * as Yup from 'yup';
+import React, {useEffect, useState} from 'react';
+import {Controller, useForm} from 'react-hook-form';
+import {TextInput, TouchableOpacity, View} from 'react-native';
+import {Text} from 'react-native-paper';
+import {useCreateDetailsMutation} from '../lib/api/expenseSlice';
 
-// Validation schema
-const validationSchema = Yup.object().shape({
-  date: Yup.date().required('Date and time are required').nullable(),
-  details: Yup.string().required('Details are required'),
-  amount: Yup.number()
-    .required('Amount is required')
-    .positive('Amount must be positive'),
-  type: Yup.string().required('Type is required'),
-});
+const FormScreen = ({navigation}: any) => {
+  // Initialize useForm with default values
+  const {control, handleSubmit, setValue} = useForm({
+    defaultValues: {
+      details: '',
+      amount: '',
+      type: 'expense', // Set default transaction type
+    },
+  });
 
-const FormCard = () => {
-  const [date, setDate] = useState(new Date());
-  const [showPicker, setShowPicker] = useState(false);
+  const [selectedValue, setSelectedValue] = useState('expense');
+  const [createDetails, isLoading] = useCreateDetailsMutation();
 
-  const handleSubmit = values => {
-    Alert.alert('Form Submitted', JSON.stringify(values, null, 2));
+  useEffect(() => {
+    setValue('type', selectedValue);
+  }, [setValue, selectedValue]);
+
+  const onSubmit = async (data: any) => {
+    // Get the current date in YYYY-MM-DD format
+    const currentDate = new Date().toISOString().slice(0, 10);
+
+    // Add the date to the submitted data
+    const formData = {
+      ...data,
+      date: currentDate,
+    };
+    const res = await createDetails(formData);
+    if (res?.data) {
+      navigation.navigate('home');
+    }
   };
 
   return (
-    <View style={{flex: 1, padding: 16}}>
-      <Formik
-        initialValues={{date: null, details: '', amount: '', type: ''}}
-        validationSchema={validationSchema}
-        onSubmit={handleSubmit}>
-        {({
-          handleChange,
-          handleBlur,
-          handleSubmit,
-          values,
-          errors,
-          touched,
-        }) => (
-          <>
-            {/* Date and Time Field */}
-            <View style={{marginBottom: 16}}>
-              <Text style={{fontWeight: 'bold', color: 'blue'}}>
-                Date and Time
-              </Text>
-              <Button
-                mode="outlined"
-                onPress={() => setShowPicker(true)}
-                style={{marginTop: 8}}>
-                {values.date ? date.toLocaleString() : 'Select date and time'}
-              </Button>
-              {showPicker && (
-                <DateTimePicker
-                  value={date}
-                  mode="datetime"
-                  is24Hour={true}
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    const currentDate = selectedDate || date;
-                    setShowPicker(false);
-                    setDate(currentDate);
-                    handleChange('date')(currentDate);
-                  }}
-                />
-              )}
-              {errors.date && touched.date && (
-                <Text style={{color: 'red'}}>{errors.date}</Text>
-              )}
-            </View>
+    <View className="flex-1 bg-black justify-center items-center">
+      <View className="w-full px-10">
+        <Controller
+          control={control}
+          name="details"
+          render={({field: {onChange, onBlur, value}}) => (
+            <TextInput
+              className="bg-white text-black border border-gray-300 rounded-lg p-4 mt-2"
+              placeholder="details"
+              placeholderTextColor="gray"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
+          rules={{required: true}} // Example validation rule
+        />
+        <Controller
+          control={control}
+          name="amount"
+          render={({field: {onChange, onBlur, value}}) => (
+            <TextInput
+              className="bg-white text-black border border-gray-300 rounded-lg p-4 mt-2"
+              placeholder="Enter a number"
+              placeholderTextColor="gray"
+              keyboardType="numeric"
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value}
+            />
+          )}
+          rules={{required: true}} // Example validation rule
+        />
 
-            {/* Details Field */}
-            <View style={{marginBottom: 16}}>
-              <TextInput
-                label="Details"
-                mode="outlined"
-                onChangeText={handleChange('details')}
-                onBlur={handleBlur('details')}
-                value={values.details}
-                error={touched.details && Boolean(errors.details)}
-              />
-              {errors.details && touched.details && (
-                <Text style={{color: 'red'}}>{errors.details}</Text>
-              )}
-            </View>
+        {/* Wrapper View to apply border radius */}
+        <View className="bg-white rounded-lg border border-gray-300 mt-2">
+          <Picker
+            selectedValue={selectedValue}
+            onValueChange={itemValue => {
+              setSelectedValue(itemValue);
+              setValue('type', itemValue); // Use setValue here
+            }}
+            style={{color: 'black'}} // Set text color
+          >
+            <Picker.Item label="Earn" value="earn" />
+            <Picker.Item label="Expense" value="expense" />
+          </Picker>
+        </View>
 
-            {/* Amount Field */}
-            <View style={{marginBottom: 16}}>
-              <TextInput
-                label="Amount"
-                mode="outlined"
-                keyboardType="numeric"
-                onChangeText={handleChange('amount')}
-                onBlur={handleBlur('amount')}
-                value={values.amount}
-                error={touched.amount && Boolean(errors.amount)}
-              />
-              {errors.amount && touched.amount && (
-                <Text style={{color: 'red'}}>{errors.amount}</Text>
-              )}
-            </View>
-
-            {/* Type Field */}
-            <View style={{marginBottom: 16}}>
-              <Text style={{fontWeight: 'bold', color: 'blue'}}>Type</Text>
-              <Picker
-                selectedValue={values.type}
-                onValueChange={handleChange('type')}
-                onBlur={handleBlur('type')}
-                mode="dropdown"
-                style={{
-                  borderWidth: 1,
-                  borderColor: 'gray',
-                  borderRadius: 4,
-                  padding: 8,
-                }}>
-                <Picker.Item label="Select type" value="" />
-                <Picker.Item label="Earn" value="earn" />
-                <Picker.Item label="Expense" value="expense" />
-              </Picker>
-              {errors.type && touched.type && (
-                <Text style={{color: 'red'}}>{errors.type}</Text>
-              )}
-            </View>
-
-            {/* Submit Button */}
-            <Button
-              mode="contained"
-              onPress={handleSubmit}
-              style={{marginTop: 16}}>
-              Submit
-            </Button>
-          </>
-        )}
-      </Formik>
+        <TouchableOpacity
+          className="bg-blue-500 rounded-lg p-4 mt-4"
+          onPress={handleSubmit(onSubmit)} // Call handleSubmit on button press
+        >
+          <Text className="text-white text-center font-semibold">Submit</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
-export default FormCard;
+export default FormScreen;
