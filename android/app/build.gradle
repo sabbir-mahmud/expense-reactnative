@@ -73,6 +73,20 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = 'org.webkit:android-jsc:+'
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('my-release-key.keystore') // Path to your keystore file
+            storePassword 'your-store-password' // Keystore password
+            keyAlias 'your-key-alias' // Key alias
+            keyPassword 'your-key-password' // Key password
+        }
+    }
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            // other release configurations
+        }
+    }
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
